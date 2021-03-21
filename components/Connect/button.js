@@ -8,6 +8,8 @@ import Web3Modal from "web3modal";
 import { useWeb3 } from "../../helpers/web3";
 import { shortenAddress } from "../../helpers/address";
 
+import chains from "../../chains.json";
+
 const ConnectionDetails = styled.span`
   display: inline-block;
   margin: 0 0 0 1rem;
@@ -92,10 +94,13 @@ function Connect() {
     return (
       <div>
         <button onClick={deactivate}>Disconnect</button>
-        {account && chainId && (
+        {account && chainId && chainId in chains && (
           <ConnectionDetails>
-            👤 {shortenAddress(account)} / ⛓️ {chainId}
+            👤 {shortenAddress(account)} / ⛓️ {chains[chainId].name}
           </ConnectionDetails>
+        )}
+        {chainId && !(chainId in chains) && (
+          <ConnectionDetails>⛔ Unsupported chain</ConnectionDetails>
         )}
       </div>
     );

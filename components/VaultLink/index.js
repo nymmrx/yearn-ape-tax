@@ -1,26 +1,19 @@
-import Link from "next/link"
+import Link from "next/link";
 import styled from "styled-components";
+
+import { Dotted } from "../Typography";
 
 const Logo = styled.span`
   display: inline-block;
   width: 4.2rem;
 `;
 
-const Dotted = styled.a`
-  border-bottom: 2px dotted white;
-  transition: all 100ms;
-  &:hover {
-    border-bottom: 2px dotted black;
-  }
-`;
-
-
 function VaultLink({ vault }) {
   return (
-    <h4 key={vault.NAME}>
-      <Logo>{vault.LOGO}</Logo>
-      <Link href={`/vaults/${vault.NAME}`} passHref>
-        <Dotted>{vault.NAME}</Dotted>
+    <h4>
+      <Logo>{vault.logo}</Logo>
+      <Link href={`/vaults/${vault.id}`} passHref>
+        <Dotted>{vault.title}</Dotted>
       </Link>
     </h4>
   );

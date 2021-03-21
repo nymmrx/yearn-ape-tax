@@ -1,0 +1,12 @@
+{
+  "1": {
+    "name": "ETH Mainnet",
+    "coin": "ETH",
+    "explorer": "https://etherscan.io"
+  },
+  "250": {
+    "name": "FTM Mainnet",
+    "coin": "FTM",
+    "explorer": "https://ftmscan.com"
+  }
+}
