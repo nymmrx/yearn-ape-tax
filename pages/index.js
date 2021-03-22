@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import Head from "next/head";
+import styled from "styled-components";
 
 import Connect from "../components/Connect";
 import VaultLink from "../components/VaultLink";
@@ -7,17 +8,24 @@ import Warning from "../components/Warning";
 import { Page } from "../components/Layout";
 
 import { useWeb3 } from "../helpers/web3";
+import { measures } from "../helpers/measures";
 
 import vaults from "../vaults.json";
-import styled from "styled-components";
 
 const Types = styled.div`
   display: flex;
+  max-width: ${measures.max};
+  div {
+    flex-grow: 1;
+  }
+  div:last-child {
+    flex-shrink: 1;
+  }
 `;
 
 const Column = styled.div`
   margin: 0 2rem 0 0;
-  @media screen and (max-width: 350px) {
+  @media screen and (max-width: ${measures.phone}) {
     display: block;
     margin: 0 1rem 0 0;
   }

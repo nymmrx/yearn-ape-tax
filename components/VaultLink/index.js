@@ -5,14 +5,14 @@ import { Dotted } from "../Typography";
 
 const Logo = styled.span`
   display: inline-block;
-  width: 4.2rem;
+  width: 4.3rem;
 `;
 
 function VaultLink({ vault }) {
   return (
     <h4>
       <Logo>{vault.logo}</Logo>
-      <Link href={`/vaults/${vault.id}`} passHref>
+      <Link href={`/${vault.id}`} passHref>
         <Dotted>{vault.title}</Dotted>
       </Link>
     </h4>

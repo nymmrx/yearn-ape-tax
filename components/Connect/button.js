@@ -7,13 +7,14 @@ import Web3Modal from "web3modal";
 
 import { useWeb3 } from "../../helpers/web3";
 import { shortenAddress } from "../../helpers/address";
+import { measures } from "../../helpers/measures";
 
 import chains from "../../chains.json";
 
 const ConnectionDetails = styled.span`
   display: inline-block;
   margin: 0 0 0 1rem;
-  @media screen and (max-width: 350px) {
+  @media screen and (max-width: ${measures.phone}) {
     display: block;
     margin: 1rem 0 0 0;
   }

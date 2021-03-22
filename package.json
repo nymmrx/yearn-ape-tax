@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "format": "prettier --ignore-path .gitignore --write ."
   },
   "dependencies": {
     "next": "10.0.9",
@@ -20,6 +21,7 @@
     "@ethersproject/providers": "^5.0.24",
     "@walletconnect/web3-provider": "^1.4.0",
     "babel-plugin-styled-components": "^1.12.0",
+    "prettier": "^2.2.1",
     "web3modal": "^1.9.3"
   }
 }
