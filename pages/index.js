@@ -8,6 +8,7 @@ import Warning from "../components/Warning";
 import { Page } from "../components/Layout";
 
 import { useWeb3 } from "../helpers/web3";
+import { useKonami } from "../helpers/konami";
 import { measures } from "../helpers/measures";
 
 import vaults from "../vaults.json";
@@ -33,6 +34,7 @@ const Column = styled.div`
 
 export default function Home() {
   const { connected, chainId } = useWeb3();
+  const { activated } = useKonami();
   const vaultsByType = useMemo(() => {
     if (connected && chainId) {
       const all = Object.values(vaults).filter(
@@ -76,6 +78,8 @@ export default function Home() {
           ))}
         </Types>
       )}
+      {activated && <h1>MONKE</h1>}
+      {!connected && <h5>connect your wallet...</h5>}
     </Page>
   );
 }

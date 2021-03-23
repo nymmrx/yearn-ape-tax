@@ -19,23 +19,34 @@ button {
   font-size: 0.95rem;
 }
 
-h1 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: #363636;
-  font-size: 2rem;
   line-height: 1.125;
+}
+
+h1 {
+  font-size: 2rem;
   font-weight: 700;
 }
 
 h3 {
-  color: #363636;
   font-size: 1.5rem;
-  line-height: 1.125;
   font-weight: 700;
 }
 
 h4 {
-  color: #363636;
   font-size: 1.2rem;
+  font-weight: 500;
+}
+
+h5 {
+  color: #363636;
+  font-size: 1rem;
   line-height: 1.125;
   font-weight: 500;
 }
