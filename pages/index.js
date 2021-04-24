@@ -3,7 +3,7 @@ import Head from "next/head";
 import styled from "styled-components";
 
 import Connect from "../components/Connect";
-import VaultLink from "../components/VaultLink";
+import VaultLink from "../components/Vault/VaultLink";
 import Warning from "../components/Warning";
 import { Page } from "../components/Layout";
 
@@ -22,13 +22,16 @@ const Types = styled.div`
   div:last-child {
     flex-shrink: 1;
   }
+  @media screen and (max-width: ${measures.phone}) {
+    display: block;
+  }
 `;
 
 const Column = styled.div`
   margin: 0 2rem 0 0;
   @media screen and (max-width: ${measures.phone}) {
     display: block;
-    margin: 0 1rem 0 0;
+    margin: 0 0 0 0;
   }
 `;
 
@@ -37,16 +40,18 @@ export default function Home() {
   const { activated } = useKonami();
   const vaultsByType = useMemo(() => {
     if (connected && chainId) {
-      const all = Object.values(vaults).filter(
-        (vault) => vault.chainId === chainId
-      );
+      const all = Object.values(vaults)
+        .filter((vault) => vault.chainId === chainId)
+        .filter((vault) => vault.status !== "stealth");
       const types = all.reduce((types, item) => {
         const type = types[item.type] || [];
         type.push(item);
         types[item.type] = type;
         return types;
       }, {});
-      console.log(types);
+      Object.values(types).forEach((list) =>
+        list.sort((a, b) => a.status.localeCompare(b.status))
+      );
       return Object.entries(types);
     } else {
       [];
