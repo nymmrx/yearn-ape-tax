@@ -49,9 +49,7 @@ export default function Home() {
         types[item.type] = type;
         return types;
       }, {});
-      Object.values(types).forEach((list) =>
-        list.sort((a, b) => a.status.localeCompare(b.status))
-      );
+      Object.values(types).forEach((list) => list.sort((a, b) => a.status.localeCompare(b.status)));
       return Object.entries(types);
     } else {
       [];
@@ -66,10 +64,9 @@ export default function Home() {
       <Connect />
       <hr />
       <Warning>
-        this experiments are experimental. They are extremely risky and will
-        probably be discarded when the test is over. There's a good chance that
-        you can lose your funds. If you choose to proceed, do it with extreme
-        caution.
+        this experiments are experimental. They are extremely risky and will probably be discarded
+        when the test is over. There's a good chance that you can lose your funds. If you choose to
+        proceed, do it with extreme caution.
       </Warning>
       {connected && chainId && (
         <Types>

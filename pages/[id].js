@@ -1,9 +1,16 @@
+import React, { useEffect, useState, useMemo } from "react";
+
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
+
 import styled from "styled-components";
 
+import { Contract } from "@ethersproject/contracts";
+
 import { useWeb3 } from "../helpers/web3";
+import { formatUnits } from "../helpers/units";
+import { shortenAddress } from "../helpers/address";
 
 import Suspense from "../components/Suspense";
 import Connect from "../components/Connect";
@@ -14,7 +21,10 @@ import { Dotted } from "../components/Typography";
 
 import vaults from "../vaults.json";
 import chains from "../chains.json";
-import { shortenAddress } from "../helpers/address";
+
+import abiVaultV2 from "../abi/vault.json";
+import abiErc20 from "../abi/erc20.json";
+import BigNumber from "bignumber.js";
 
 const Title = styled.span`
   white-space: nowrap;
@@ -65,11 +75,41 @@ const F = new Intl.NumberFormat("en-US", {
 });
 
 export default function Vault() {
-  const { account, chainId } = useWeb3();
+  const { account, chainId, web3 } = useWeb3();
   const router = useRouter();
   const { id } = router.query;
 
   const vault = vaults.find((vault) => vault.id === id);
+
+  const [ethBalance, setEthBalance] = useState();
+
+  const [vaultDecimals, setVaultDecimals] = useState();
+  const [vaultVersion, setVaultVersion] = useState();
+  const [vaultDepositLimit, setVaultDepositLimit] = useState();
+  const [vaultAvailableLimit, setVaultAvailableLimit] = useState();
+  const [vaultTotalAssets, setVaultTotalAssets] = useState();
+  const [vaultPricePerShare, setVaultPricePerShare] = useState();
+
+  useEffect(async () => {
+    if (web3 && account && vault) {
+      web3.getBalance(account).then(setEthBalance);
+      const contract = new Contract(vault.address, abiVaultV2, web3);
+      contract.decimals().then(setVaultDecimals);
+      contract.apiVersion().then(setVaultVersion);
+      contract.depositLimit().then(setVaultDepositLimit);
+      contract.availableDepositLimit().then(setVaultAvailableLimit);
+      contract.totalAssets().then(setVaultTotalAssets);
+      contract.pricePerShare().then(setVaultPricePerShare);
+    }
+  }, [web3, account]);
+
+  const vaultLimitPercentage = useMemo(() => {
+    if (!vaultDepositLimit || !vaultAvailableLimit) return 0;
+    if (vaultDepositLimit.isZero()) return 0;
+    const depositLimit = new BigNumber(vaultDepositLimit.toString());
+    const availableLimit = new BigNumber(vaultAvailableLimit.toString());
+    return depositLimit.minus(availableLimit).dividedBy(depositLimit).toNumber();
+  }, [vaultDepositLimit, vaultAvailableLimit]);
 
   if (!id) {
     return (
@@ -93,8 +133,8 @@ export default function Vault() {
       <Connect />
       <hr />
       <Warning>
-        this experiment is experimental. It's extremely risky and will probably
-        be discarded when the test is over. Proceed with extreme caution.
+        this experiment is experimental. It's extremely risky and will probably be discarded when
+        the test is over. Proceed with extreme caution.
       </Warning>
       <Link href={"/"} passHref>
         <span>
@@ -104,12 +144,10 @@ export default function Vault() {
       </Link>
       <Section>
         <p>
-          Vault: 📃
+          <span>Vault: 📃 </span>
           <Dotted
             color="gray"
-            href={`//${chains[chainId || "1"].explorer}/address/${
-              vault.address
-            }`}
+            href={`//${chains[chainId || "1"].explorer}/address/${vault.address}`}
             target="_blank"
           >
             Contract
@@ -117,7 +155,7 @@ export default function Vault() {
         </p>
         <p>
           <span>Version: </span>
-          <Suspense>0.3.5</Suspense>
+          <Suspense wait={vaultVersion}>{vaultVersion}</Suspense>
         </p>
         <p>
           <span>{vault.wantSymbol} price (CoinGecko 🦎): </span>
@@ -125,14 +163,14 @@ export default function Vault() {
         </p>
         <p>
           <span>Deposit Limit: </span>
-          <Suspense>
-            {F.format(2000000.0)} {vault.wantSymbol}
+          <Suspense wait={vaultDepositLimit && vaultDecimals}>
+            {formatUnits(vaultDepositLimit, vaultDecimals)} {vault.wantSymbol}
           </Suspense>
         </p>
         <p>
           <span>Total Assets: </span>
-          <Suspense>
-            {F.format(10.0)} {vault.wantSymbol}
+          <Suspense wait={vaultTotalAssets && vaultDecimals}>
+            {formatUnits(vaultTotalAssets, vaultDecimals, 10)} {vault.wantSymbol}
           </Suspense>
         </p>
         <p>
@@ -142,15 +180,17 @@ export default function Vault() {
         <br />
         <p>
           <span>Price Per Share: </span>
-          <Suspense>{F.format(1.0)}</Suspense>
+          <Suspense wait={vaultPricePerShare && vaultDecimals}>
+            {formatUnits(vaultPricePerShare, vaultDecimals)}
+          </Suspense>
         </p>
         <p>
           <span>Available limit: </span>
-          <Suspense>
-            {F.format(1999990.0)} {vault.wantSymbol}
+          <Suspense wait={vaultAvailableLimit}>
+            {formatUnits(vaultAvailableLimit, vaultDecimals, 10)} {vault.wantSymbol}
           </Suspense>
         </p>
-        <VaultLimit value={0.2} />
+        <VaultLimit value={vaultLimitPercentage} />
       </Section>
       <Section>
         <h3>Strategies</h3>
@@ -159,8 +199,8 @@ export default function Vault() {
             <b>Strat. 0</b> StrategyHelloWorld
           </p>
           <p>
-            Address: 📃
-            <Dotted></Dotted>
+            <span>Address: 📃 </span>
+            <Dotted color="gray">Contract</Dotted>
           </p>
         </div>
       </Section>
@@ -184,13 +224,24 @@ export default function Vault() {
         </p>
         <p>
           <span>Your ETH balance: </span>
-          <Suspense>{F.format(0.0)}</Suspense>
+          <Suspense wait={ethBalance}>{formatUnits(ethBalance, 18, 10)} Ξ</Suspense>
         </p>
       </Section>
       <Section>
-        <label for="amount">Amount</label>
+        <label>Amount</label>
         <Amount>
-          <input type="text" id="amount" />
+          <input
+            inputMode="decimal"
+            title="Token Amount"
+            autoComplete="off"
+            autoCorrect="off"
+            type="text"
+            pattern="^[0-9]*[.,]?[0-9]*$"
+            placeholder={"0.0"}
+            minLength={1}
+            maxLength={79}
+            spellCheck="false"
+          />
           <InputUnit>{vault.wantSymbol}</InputUnit>
         </Amount>
       </Section>

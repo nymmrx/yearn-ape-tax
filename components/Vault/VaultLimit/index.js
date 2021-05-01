@@ -19,19 +19,14 @@ export default function VaultLimit({ value }) {
 
   const size = useWindowSize();
   const width = size.width > 500 ? 40 : 20;
-  console.log(size);
 
-  const wholeWidth = useMemo(() => Math.floor(value * width), [width]);
-  const part = useMemo(() => Math.floor(((value * width) % 1) * 9), [width]);
+  const wholeWidth = useMemo(() => Math.floor(value * width), [width, value]);
+  const part = useMemo(() => Math.floor(((value * width) % 1) * 9), [width, value]);
 
   return (
     <div>
       <ProgressBar>
-        [
-        {whole.repeat(wholeWidth) +
-          parts[part] +
-          space.repeat(width - wholeWidth)}
-        ]
+        [{whole.repeat(wholeWidth) + parts[part] + space.repeat(width - wholeWidth)}]
       </ProgressBar>
       <span> {F.format(value)}</span>
     </div>

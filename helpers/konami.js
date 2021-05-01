@@ -11,18 +11,7 @@ const KeyMap = {
   66: "b",
 };
 
-const KonamiCode = [
-  "up",
-  "up",
-  "down",
-  "down",
-  "left",
-  "right",
-  "left",
-  "right",
-  "b",
-  "a",
-];
+const KonamiCode = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a"];
 
 function KonamiContextProvider(props) {
   const [activated, setActivated] = useState(false);
@@ -52,12 +41,7 @@ function KonamiContextProvider(props) {
     };
   }, [position, setPosition, setActivated, activated]);
 
-  return (
-    <konamiContext.Provider
-      value={{ activated }}
-      {...props}
-    ></konamiContext.Provider>
-  );
+  return <konamiContext.Provider value={{ activated }} {...props}></konamiContext.Provider>;
 }
 
 export function useKonami() {

@@ -3,14 +3,7 @@ import React, { useEffect, useContext, useState } from "react";
 export const suspenseContext = React.createContext(0);
 
 function SuspenseContextProvider(props) {
-  const frames = [
-    "[-----]",
-    "[=----]",
-    "[-=---]",
-    "[--=--]",
-    "[---=-]",
-    "[----=]",
-  ];
+  const frames = ["[-----]", "[=----]", "[-=---]", "[--=--]", "[---=-]", "[----=]"];
   const [index, setIndex] = useState(0);
   useEffect(() => {
     const timer = setInterval(() => {
@@ -19,12 +12,7 @@ function SuspenseContextProvider(props) {
     return () => clearTimeout(timer);
   }, []);
 
-  return (
-    <suspenseContext.Provider
-      value={frames[index]}
-      {...props}
-    ></suspenseContext.Provider>
-  );
+  return <suspenseContext.Provider value={frames[index]} {...props}></suspenseContext.Provider>;
 }
 
 export function useSuspense() {
