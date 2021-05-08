@@ -25,9 +25,7 @@ export default function VaultLimit({ value }) {
 
   return (
     <div>
-      <ProgressBar>
-        [{whole.repeat(wholeWidth) + parts[part] + space.repeat(width - wholeWidth)}]
-      </ProgressBar>
+      <ProgressBar>[{whole.repeat(wholeWidth) + parts[part] + space.repeat(width - wholeWidth)}]</ProgressBar>
       <span> {F.format(value)}</span>
     </div>
   );

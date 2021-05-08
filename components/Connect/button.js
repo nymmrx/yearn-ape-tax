@@ -100,9 +100,7 @@ function Connect() {
             👤 {shortenAddress(account)} / ⛓️ {chains[chainId].name}
           </ConnectionDetails>
         )}
-        {chainId && !(chainId in chains) && (
-          <ConnectionDetails>⛔ Unsupported chain</ConnectionDetails>
-        )}
+        {chainId && !(chainId in chains) && <ConnectionDetails>⛔ Unsupported chain</ConnectionDetails>}
       </div>
     );
   }

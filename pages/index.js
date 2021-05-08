@@ -64,9 +64,8 @@ export default function Home() {
       <Connect />
       <hr />
       <Warning>
-        this experiments are experimental. They are extremely risky and will probably be discarded
-        when the test is over. There's a good chance that you can lose your funds. If you choose to
-        proceed, do it with extreme caution.
+        this experiments are experimental. They are extremely risky and will probably be discarded when the test is
+        over. There's a good chance that you can lose your funds. If you choose to proceed, do it with extreme caution.
       </Warning>
       {connected && chainId && (
         <Types>

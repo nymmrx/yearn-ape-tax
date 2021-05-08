@@ -1,0 +1,14 @@
+[
+  {
+    "name": "name",
+    "outputs": [
+      {
+        "type": "string",
+        "name": ""
+      }
+    ],
+    "inputs": [],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

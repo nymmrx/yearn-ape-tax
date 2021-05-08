@@ -6,11 +6,13 @@ import { useRouter } from "next/router";
 
 import styled from "styled-components";
 
+import BigNumber from "bignumber.js";
+
 import { Contract } from "@ethersproject/contracts";
 
 import { useWeb3 } from "../helpers/web3";
 import { formatUnits } from "../helpers/units";
-import { shortenAddress } from "../helpers/address";
+import { shortenAddress, NullAddress } from "../helpers/address";
 
 import Suspense from "../components/Suspense";
 import Connect from "../components/Connect";
@@ -23,8 +25,8 @@ import vaults from "../vaults.json";
 import chains from "../chains.json";
 
 import abiVaultV2 from "../abi/vault.json";
+import abiStrategy from "../abi/strategy.json";
 import abiErc20 from "../abi/erc20.json";
-import BigNumber from "bignumber.js";
 
 const Title = styled.span`
   white-space: nowrap;
@@ -69,10 +71,7 @@ const InputUnit = styled.div`
   border-left: none;
 `;
 
-const F = new Intl.NumberFormat("en-US", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 18,
-});
+const CoinGeckoPrice = "https://api.coingecko.com/api/v3/simple/price";
 
 export default function Vault() {
   const { account, chainId, web3 } = useWeb3();
@@ -89,8 +88,28 @@ export default function Vault() {
   const [vaultAvailableLimit, setVaultAvailableLimit] = useState();
   const [vaultTotalAssets, setVaultTotalAssets] = useState();
   const [vaultPricePerShare, setVaultPricePerShare] = useState();
+  const [vaultTokenPrice, setVaultTokenPrice] = useState();
 
-  useEffect(async () => {
+  const [userVaultShares, setUserVaultShares] = useState();
+  const [userTokenBalance, setUserTokenBalance] = useState();
+
+  const [vaultStrategies, setVaultStrategies] = useState([]);
+
+  const vaultTotalAum = useMemo(() => {
+    if (!vaultDecimals || !vaultTotalAssets || !vaultTokenPrice) return undefined;
+    let toFloat = new BigNumber(10).pow(new BigNumber(vaultDecimals.sub(2).toString()));
+    let numAum = new BigNumber(vaultTotalAssets.toString()).div(toFloat);
+    return numAum.div(100).times(vaultTokenPrice);
+  }, [vaultDecimals, vaultTotalAssets, vaultTokenPrice]);
+
+  const userSharesPrice = useMemo(() => {
+    if (!vaultDecimals || !userVaultShares || !vaultTokenPrice) return undefined;
+    let toFloat = new BigNumber(10).pow(new BigNumber(vaultDecimals.sub(2).toString()));
+    let numAum = new BigNumber(userVaultShares.toString()).div(toFloat);
+    return numAum.div(100).times(vaultTokenPrice);
+  }, [vaultDecimals, userVaultShares, vaultTokenPrice]);
+
+  useEffect(() => {
     if (web3 && account && vault) {
       web3.getBalance(account).then(setEthBalance);
       const contract = new Contract(vault.address, abiVaultV2, web3);
@@ -100,6 +119,38 @@ export default function Vault() {
       contract.availableDepositLimit().then(setVaultAvailableLimit);
       contract.totalAssets().then(setVaultTotalAssets);
       contract.pricePerShare().then(setVaultPricePerShare);
+
+      contract.balanceOf(account).then(setUserVaultShares);
+      const token = new Contract(vault.wantAddress, abiErc20, web3);
+      token.balanceOf(account).then(setUserTokenBalance).catch(console.error);
+
+      (async () => {
+        let i = 0,
+          address = NullAddress;
+        setVaultStrategies([]);
+        do {
+          address = await contract.withdrawalQueue(i++);
+          if (address !== NullAddress) {
+            const strategyContract = new Contract(address, abiStrategy, web3);
+            const name = await strategyContract.name();
+            setVaultStrategies((array) => [...array, { address, name }]);
+          }
+        } while (address !== NullAddress);
+      })();
+
+      fetch(
+        `${CoinGeckoPrice}?${new URLSearchParams({
+          ids: vault.coingeckoSymbol.toLowerCase(),
+          vs_currencies: "usd",
+        })}`
+      )
+        .then((res) => res.json())
+        .then((res) => {
+          const symbol = vault.coingeckoSymbol.toLowerCase();
+          if (!!res[symbol].usd) {
+            setVaultTokenPrice(new BigNumber(res[symbol].usd).times(1e6));
+          }
+        });
     }
   }, [web3, account]);
 
@@ -133,8 +184,8 @@ export default function Vault() {
       <Connect />
       <hr />
       <Warning>
-        this experiment is experimental. It's extremely risky and will probably be discarded when
-        the test is over. Proceed with extreme caution.
+        this experiment is experimental. It's extremely risky and will probably be discarded when the test is over.
+        Proceed with extreme caution.
       </Warning>
       <Link href={"/"} passHref>
         <span>
@@ -145,11 +196,7 @@ export default function Vault() {
       <Section>
         <p>
           <span>Vault: 📃 </span>
-          <Dotted
-            color="gray"
-            href={`//${chains[chainId || "1"].explorer}/address/${vault.address}`}
-            target="_blank"
-          >
+          <Dotted color="gray" href={`//${chains[chainId || "1"].explorer}/address/${vault.address}`} target="_blank">
             Contract
           </Dotted>
         </p>
@@ -159,7 +206,7 @@ export default function Vault() {
         </p>
         <p>
           <span>{vault.wantSymbol} price (CoinGecko 🦎): </span>
-          <Suspense>${F.format(0.9998)}</Suspense>
+          <Suspense wait={vaultTokenPrice}>${formatUnits(vaultTokenPrice, 6, 2)}</Suspense>
         </p>
         <p>
           <span>Deposit Limit: </span>
@@ -170,12 +217,12 @@ export default function Vault() {
         <p>
           <span>Total Assets: </span>
           <Suspense wait={vaultTotalAssets && vaultDecimals}>
-            {formatUnits(vaultTotalAssets, vaultDecimals, 10)} {vault.wantSymbol}
+            {formatUnits(vaultTotalAssets, vaultDecimals, 2)} {vault.wantSymbol}
           </Suspense>
         </p>
         <p>
           <span>Total AUM: </span>
-          <Suspense>${F.format(10.0)}</Suspense>
+          <Suspense wait={vaultTotalAum}>${formatUnits(vaultTotalAum, 6, 2)}</Suspense>
         </p>
         <br />
         <p>
@@ -186,7 +233,7 @@ export default function Vault() {
         </p>
         <p>
           <span>Available limit: </span>
-          <Suspense wait={vaultAvailableLimit}>
+          <Suspense wait={vaultAvailableLimit && vaultDecimals}>
             {formatUnits(vaultAvailableLimit, vaultDecimals, 10)} {vault.wantSymbol}
           </Suspense>
         </p>
@@ -195,13 +242,23 @@ export default function Vault() {
       <Section>
         <h3>Strategies</h3>
         <div>
-          <p>
-            <b>Strat. 0</b> StrategyHelloWorld
-          </p>
-          <p>
-            <span>Address: 📃 </span>
-            <Dotted color="gray">Contract</Dotted>
-          </p>
+          {vaultStrategies.map((strategy, i) => (
+            <div key={strategy.address}>
+              <p>
+                <b>Strat. {i}</b> {strategy.name}
+              </p>
+              <p>
+                <span>Address: 📃 </span>
+                <Dotted
+                  color="gray"
+                  href={`//${chains[chainId || "1"].explorer}/address/${strategy.address}`}
+                  target="_blank"
+                >
+                  Contract
+                </Dotted>
+              </p>
+            </div>
+          ))}
         </div>
       </Section>
       <Section>
@@ -212,15 +269,17 @@ export default function Vault() {
         </p>
         <p>
           <span>Your vault shares: </span>
-          <Suspense>{F.format(0.0)}</Suspense>
+          <Suspense wait={userVaultShares && vaultDecimals}>{formatUnits(userVaultShares, vaultDecimals, 2)}</Suspense>
         </p>
         <p>
           <span>Your shares value: </span>
-          <Suspense>{F.format(0.0)}</Suspense>
+          <Suspense wait={userSharesPrice}>${formatUnits(userSharesPrice, 6, 2)}</Suspense>
         </p>
         <p>
           <span>Your {vault.wantSymbol} balance: </span>
-          <Suspense>{F.format(0.0)}</Suspense>
+          <Suspense wait={userTokenBalance && vaultDecimals}>
+            {formatUnits(userTokenBalance, vaultDecimals, 2)}
+          </Suspense>
         </p>
         <p>
           <span>Your ETH balance: </span>
@@ -228,7 +287,9 @@ export default function Vault() {
         </p>
       </Section>
       <Section>
-        <label>Amount</label>
+        <label>
+          Amount (<Dotted>Max</Dotted>)
+        </label>
         <Amount>
           <input
             inputMode="decimal"
