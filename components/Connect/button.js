@@ -49,6 +49,14 @@ function Connect() {
     providerOptions,
   });
 
+  const connectProvider = (provider) => {
+    const web3 = new Web3Provider(provider);
+    Promise.all([
+      web3.getNetwork().then((net) => setChainId(net.chainId)),
+      web3.listAccounts().then(([account]) => setAccount(account)),
+    ]).then(() => setWeb3(web3));
+  };
+
   const connect = useCallback(() => {
     modal
       .connect()
@@ -56,11 +64,13 @@ function Connect() {
         provider.on("accountsChanged", ([account]) => {
           console.log("web3: accountsChanged");
           setAccount(account);
+          connectProvider(provider);
         });
 
         provider.on("chainChanged", (chainId) => {
           console.log("web3: chainChanged");
           setChainId(parseInt(chainId, 16));
+          connectProvider(provider);
         });
 
         provider.on("connect", ({ chainId }) => {
@@ -68,20 +78,18 @@ function Connect() {
           setConnected(true);
           setChainId(chainId);
           setError(undefined);
+          connectProvider(provider);
         });
 
         provider.on("disconnect", (error) => {
           console.log("web3: disconnect");
           reset(error);
+          console.log(error);
         });
 
         setProvider(provider);
         setConnected(true);
-
-        const web3 = new Web3Provider(provider);
-        web3.getNetwork().then((net) => setChainId(net.chainId));
-        web3.listAccounts().then(([account]) => setAccount(account));
-        setWeb3(web3);
+        connectProvider(provider);
       })
       .catch((error) => console.error(error));
   });

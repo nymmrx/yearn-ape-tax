@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 
 import Head from "next/head";
 import Link from "next/link";
@@ -11,7 +11,7 @@ import BigNumber from "bignumber.js";
 import { Contract } from "@ethersproject/contracts";
 
 import { useWeb3 } from "../helpers/web3";
-import { formatUnits } from "../helpers/units";
+import { formatUnits, parseUnits, MaxUint } from "../helpers/units";
 import { shortenAddress, NullAddress } from "../helpers/address";
 
 import Suspense from "../components/Suspense";
@@ -20,6 +20,7 @@ import Warning from "../components/Warning";
 import VaultLimit from "../components/Vault/VaultLimit";
 import { Page } from "../components/Layout";
 import { Dotted } from "../components/Typography";
+import NumericInput from "../components/NumericInput";
 
 import vaults from "../vaults.json";
 import chains from "../chains.json";
@@ -74,7 +75,7 @@ const InputUnit = styled.div`
 const CoinGeckoPrice = "https://api.coingecko.com/api/v3/simple/price";
 
 export default function Vault() {
-  const { account, chainId, web3 } = useWeb3();
+  const { account, connected, chainId, web3 } = useWeb3();
   const router = useRouter();
   const { id } = router.query;
 
@@ -92,8 +93,15 @@ export default function Vault() {
 
   const [userVaultShares, setUserVaultShares] = useState();
   const [userTokenBalance, setUserTokenBalance] = useState();
+  const [userAllowance, setUserAllowance] = useState(false);
 
   const [vaultStrategies, setVaultStrategies] = useState([]);
+
+  const [input, setInput] = useState();
+
+  const [tick, setTick] = useState(false);
+
+  const update = useCallback(() => setTick(!tick), [tick, setTick]);
 
   const vaultTotalAum = useMemo(() => {
     if (!vaultDecimals || !vaultTotalAssets || !vaultTokenPrice) return undefined;
@@ -110,7 +118,8 @@ export default function Vault() {
   }, [vaultDecimals, userVaultShares, vaultTokenPrice]);
 
   useEffect(() => {
-    if (web3 && account && vault) {
+    console.log("[VAULT] Update");
+    if (web3 && connected && account && vault && chainId === vault.chainId) {
       web3.getBalance(account).then(setEthBalance);
       const contract = new Contract(vault.address, abiVaultV2, web3);
       contract.decimals().then(setVaultDecimals);
@@ -121,8 +130,10 @@ export default function Vault() {
       contract.pricePerShare().then(setVaultPricePerShare);
 
       contract.balanceOf(account).then(setUserVaultShares);
+
       const token = new Contract(vault.wantAddress, abiErc20, web3);
-      token.balanceOf(account).then(setUserTokenBalance).catch(console.error);
+      token.balanceOf(account).then(setUserTokenBalance);
+      token.allowance(account, vault.address).then((res) => setUserAllowance(!res.isZero()));
 
       (async () => {
         let i = 0,
@@ -147,12 +158,12 @@ export default function Vault() {
         .then((res) => res.json())
         .then((res) => {
           const symbol = vault.coingeckoSymbol.toLowerCase();
-          if (!!res[symbol].usd) {
+          if (!!res[symbol]) {
             setVaultTokenPrice(new BigNumber(res[symbol].usd).times(1e6));
           }
         });
     }
-  }, [web3, account]);
+  }, [web3, connected, account, tick]);
 
   const vaultLimitPercentage = useMemo(() => {
     if (!vaultDepositLimit || !vaultAvailableLimit) return 0;
@@ -161,6 +172,59 @@ export default function Vault() {
     const availableLimit = new BigNumber(vaultAvailableLimit.toString());
     return depositLimit.minus(availableLimit).dividedBy(depositLimit).toNumber();
   }, [vaultDepositLimit, vaultAvailableLimit]);
+
+  const currentChain = useMemo(() => {
+    if (!chainId || Object.keys(chains).includes(chainId)) {
+      return chains["1"];
+    } else {
+      return chains[chainId];
+    }
+  }, [chainId]);
+
+  const max = useCallback(() => {
+    if (userTokenBalance && userTokenBalance.gt(0) && vaultDecimals) {
+      setInput(new BigNumber(userTokenBalance.toString()).div(10 ** vaultDecimals).toString());
+    }
+  }, [userTokenBalance, vaultDecimals]);
+
+  const approve = useCallback(() => {
+    if (web3 && account) {
+      const signer = web3.getSigner(account);
+      const token = new Contract(vault.wantAddress, abiErc20, signer);
+      token.approve(vault.address, MaxUint).then(console.log).catch(console.error).then(update);
+    }
+  }, [web3, account]);
+
+  const deposit = useCallback(() => {
+    if (web3 && account && input && vaultDecimals) {
+      const value = parseUnits(input, vaultDecimals);
+      if (vault.lte(0)) return;
+
+      const signer = web3.getSigner(account);
+      const vault = new Contract(vault.address, abiVaultV2, signer);
+      vault.deposit(value.toString()).then(console.log).catch(console.error).then(update);
+    }
+  }, [web3, account, input, vaultDecimals]);
+
+  const depositAll = useCallback(() => {
+    if (web3 && account && userTokenBalance) {
+      if (userTokenBalance.lte(0)) return;
+
+      const signer = web3.getSigner(account);
+      const vault = new Contract(vault.address, abiVaultV2, signer);
+      vault.deposit().then(console.log).catch(console.error).then(update);
+    }
+  }, [web3, account, userTokenBalance]);
+
+  const withdrawAll = useCallback(() => {
+    if (web3 && account && userVaultShares) {
+      if (userVaultShares.lte(0)) return;
+
+      const signer = web3.getSigner(account);
+      const vault = new Contract(vault.address, abiVaultV2, signer);
+      vault.withdraw().then(console.log).catch(console.error).then(update);
+    }
+  }, [web3, account, userVaultShares]);
 
   if (!id) {
     return (
@@ -171,12 +235,15 @@ export default function Vault() {
   } else if (!vault) {
     router.replace("/");
     return <Page />;
+  } else if (chainId && chainId !== vault.chainId) {
+    router.replace("/");
+    return <Page />;
   }
 
   return (
     <Page>
       <Head>
-        <title>{vault.title}</title>
+        <title>{vault.title} - ape.tax</title>
       </Head>
       <h1>
         <Title>{vault.logo}</Title> <Title>{vault.title}</Title>
@@ -196,7 +263,7 @@ export default function Vault() {
       <Section>
         <p>
           <span>Vault: 📃 </span>
-          <Dotted color="gray" href={`//${chains[chainId || "1"].explorer}/address/${vault.address}`} target="_blank">
+          <Dotted color="gray" href={`//${currentChain.explorer}/address/${vault.address}`} target="_blank">
             Contract
           </Dotted>
         </p>
@@ -249,11 +316,7 @@ export default function Vault() {
               </p>
               <p>
                 <span>Address: 📃 </span>
-                <Dotted
-                  color="gray"
-                  href={`//${chains[chainId || "1"].explorer}/address/${strategy.address}`}
-                  target="_blank"
-                >
+                <Dotted color="gray" href={`//${currentChain.explorer}/address/${strategy.address}`} target="_blank">
                   Contract
                 </Dotted>
               </p>
@@ -282,38 +345,37 @@ export default function Vault() {
           </Suspense>
         </p>
         <p>
-          <span>Your ETH balance: </span>
-          <Suspense wait={ethBalance}>{formatUnits(ethBalance, 18, 10)} Ξ</Suspense>
+          <span>Your {currentChain.coin} balance: </span>
+          <Suspense wait={ethBalance}>
+            {formatUnits(ethBalance, 18, 10)} {currentChain.symbol}
+          </Suspense>
         </p>
       </Section>
       <Section>
         <label>
-          Amount (<Dotted>Max</Dotted>)
+          Amount (<Dotted onClick={max}>Max</Dotted>)
         </label>
         <Amount>
-          <input
-            inputMode="decimal"
-            title="Token Amount"
-            autoComplete="off"
-            autoCorrect="off"
-            type="text"
-            pattern="^[0-9]*[.,]?[0-9]*$"
-            placeholder={"0.0"}
-            minLength={1}
-            maxLength={79}
-            spellCheck="false"
-          />
+          <NumericInput value={input} onChange={setInput} />
           <InputUnit>{vault.wantSymbol}</InputUnit>
         </Amount>
       </Section>
-      <Section>
-        <Buttons>
-          <button>🚀 Approve</button>
-          <button>🏦 Deposit</button>
-          <button>🏦 Deposit All</button>
-          <button>💸 Withdraw All</button>
-        </Buttons>
-      </Section>
+      {connected && userVaultShares && (
+        <Section>
+          <Buttons>
+            <button onClick={approve} disabled={vault.status === "withdraw" || userAllowance}>
+              🚀 Approve
+            </button>
+            <button onClick={deposit} disabled={vault.status === "withdraw" || !userAllowance}>
+              🏦 Deposit
+            </button>
+            <button onClick={depositAll} disabled={vault.status === "withdraw" || !userAllowance}>
+              🏦 Deposit All
+            </button>
+            <button disabled={userVaultShares.isZero()}>💸 Withdraw All</button>
+          </Buttons>
+        </Section>
+      )}
     </Page>
   );
 }

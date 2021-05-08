@@ -1,5 +1,9 @@
 import { formatUnits as legacyFormatUnits } from "@ethersproject/units";
+import { BigNumber as LegacyBigNumber } from "@ethersproject/bignumber";
+
 import BigNumber from "bignumber.js";
+
+export const MaxUint = LegacyBigNumber.from(2).pow(256).sub(1).toString();
 
 const DigitsFormatter = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
@@ -20,3 +24,5 @@ export function formatUnits(value, unit, limit) {
   if (decimal.length < limit) return formatted;
   return DigitsFormatter.format(`${whole}.${decimal.substr(0, limit)}`);
 }
+
+export { parseUnits } from "@ethersproject/units";
