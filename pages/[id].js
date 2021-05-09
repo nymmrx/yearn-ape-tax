@@ -74,6 +74,8 @@ const InputUnit = styled.div`
 
 const CoinGeckoPrice = "https://api.coingecko.com/api/v3/simple/price";
 
+const Custom = ["yvsteth", "stecrv"];
+
 export default function Vault() {
   const { account, connected, chainId, web3 } = useWeb3();
   const router = useRouter();
@@ -119,6 +121,7 @@ export default function Vault() {
 
   useEffect(() => {
     console.log("[VAULT] Update");
+    if (Custom.includes(id)) return; // FIXME
     if (web3 && connected && account && vault && chainId === vault.chainId) {
       web3.getBalance(account).then(setEthBalance);
       const contract = new Contract(vault.address, abiVaultV2, web3);
@@ -238,6 +241,38 @@ export default function Vault() {
   } else if (chainId && chainId !== vault.chainId) {
     router.replace("/");
     return <Page />;
+  }
+
+  if (Custom.includes(id)) {
+    return (
+      <Page>
+        <Head>
+          <title>{vault.title} - ape.tax</title>
+          <meta
+            name="description"
+            content="Staging environment and experiment repository for bleeding edge yearn.finance vaults."
+          />
+        </Head>
+        <h1>
+          <Title>{vault.logo}</Title> <Title>{vault.title}</Title>
+        </h1>
+        <Connect />
+        <hr />
+        <Warning>
+          this experiment is experimental. It's extremely risky and will probably be discarded when the test is over.
+          Proceed with extreme caution.
+        </Warning>
+        <Link href={"/"} passHref>
+          <span>
+            {"<< "}
+            <Dotted>Back home</Dotted>
+          </span>
+        </Link>
+        <Section>
+          <span>👷‍♂️ Work in progress...</span>
+        </Section>
+      </Page>
+    );
   }
 
   return (
