@@ -244,6 +244,10 @@ export default function Vault() {
     <Page>
       <Head>
         <title>{vault.title} - ape.tax</title>
+        <meta
+          name="description"
+          content="Staging environment and experiment repository for bleeding edge yearn.finance vaults."
+        />
       </Head>
       <h1>
         <Title>{vault.logo}</Title> <Title>{vault.title}</Title>

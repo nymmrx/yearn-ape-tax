@@ -59,6 +59,10 @@ export default function Home() {
     <Page>
       <Head>
         <title>Experimental Experiments</title>
+        <meta
+          name="description"
+          content="Staging environment and experiment repository for bleeding edge yearn.finance vaults."
+        />
       </Head>
       <h1>Experimental experiment registry</h1>
       <Connect />
