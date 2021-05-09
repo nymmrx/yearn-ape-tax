@@ -254,22 +254,42 @@ export default function Vault() {
             content="Staging environment and experiment repository for bleeding edge yearn.finance vaults."
           />
         </Head>
-        <h1>
-          <Title>{vault.logo}</Title> <Title>{vault.title}</Title>
-        </h1>
-        <Connect />
-        <hr />
-        <Warning>
-          this experiment is experimental. It's extremely risky and will probably be discarded when the test is over.
-          Proceed with extreme caution.
-        </Warning>
-        <Link href={"/"} passHref>
-          <span>
-            {"<< "}
-            <Dotted>Back home</Dotted>
-          </span>
-        </Link>
-        <Section></Section>
+        <Content>
+          <h1>
+            <Title>{vault.logo}</Title> <Title>{vault.title}</Title>
+          </h1>
+          <Connect />
+          <hr />
+          <Warning>
+            this experiment is experimental. It's extremely risky and will probably be discarded when the test is over.
+            Proceed with extreme caution.
+          </Warning>
+          <Link href={"/"} passHref>
+            <span>
+              {"<< "}
+              <Dotted>Back home</Dotted>
+            </span>
+          </Link>
+          <Section>👷‍♂️ Work in progress...</Section>
+        </Content>
+        <footer>
+          <hr />
+          <div style={{ display: "flex" }}>
+            <small style={{ flexGrow: "1" }}>
+            by 🧠 with ❤️
+            </small>
+            <small>
+              <span>UI: </span>
+              <Dotted href="https://twitter.com/nymmrx" target="_blank">
+                nymmrx
+              </Dotted>
+              <span>, </span>
+              <Dotted href="https://twitter.com/fameal" target="_blank">
+                fameal
+              </Dotted>
+            </small>
+          </div>
+        </footer>
       </Page>
     );
   }

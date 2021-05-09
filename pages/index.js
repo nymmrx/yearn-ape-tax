@@ -91,7 +91,7 @@ export default function Home() {
         <hr />
         <div style={{ display: "flex" }}>
           <small style={{ flexGrow: "1" }}>
-            by <a href="https://yearn.finance">🔵</a> with 💙
+            by 🧠 with ❤️
           </small>
           <small>
             <span>UI: </span>
