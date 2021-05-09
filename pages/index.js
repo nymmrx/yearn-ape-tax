@@ -47,6 +47,7 @@ export default function Home() {
         const type = types[item.type] || [];
         type.push(item);
         types[item.type] = type;
+        type.reverse();
         return types;
       }, {});
       Object.values(types).forEach((list) => list.sort((a, b) => a.status.localeCompare(b.status)));
