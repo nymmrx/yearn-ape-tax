@@ -263,7 +263,7 @@ export default function Vault() {
       <Section>
         <p>
           <span>Vault: 📃 </span>
-          <Dotted color="gray" href={`//${currentChain.explorer}/address/${vault.address}`} target="_blank">
+          <Dotted color="gray" href={`${currentChain.explorer}/address/${vault.address}`} target="_blank">
             Contract
           </Dotted>
         </p>
@@ -316,7 +316,7 @@ export default function Vault() {
               </p>
               <p>
                 <span>Address: 📃 </span>
-                <Dotted color="gray" href={`//${currentChain.explorer}/address/${strategy.address}`} target="_blank">
+                <Dotted color="gray" href={`${currentChain.explorer}/address/${strategy.address}`} target="_blank">
                   Contract
                 </Dotted>
               </p>

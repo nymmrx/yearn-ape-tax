@@ -3,18 +3,18 @@
     "name": "ETH Mainnet",
     "coin": "ETH",
     "symbol": "Ξ",
-    "block_explorer": "https://etherscan.io"
+    "explorer": "https://etherscan.io"
   },
   "250": {
     "name": "FTM Mainnet",
     "coin": "FTM",
     "symbol": "FTM",
-    "block_explorer": "https://ftmscan.com"
+    "explorer": "https://ftmscan.com"
   },
   "56": {
     "name": "BSC Mainnet",
     "coin": "BNB",
     "symbol": "BNB",
-    "block_explorer": "https://bscscan.com"
+    "explorer": "https://bscscan.com"
   }
 }
