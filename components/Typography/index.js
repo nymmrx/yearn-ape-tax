@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
+import { useHide } from "../../helpers/hide";
 
 export const Dotted = styled.a`
   user-select: none;
@@ -29,15 +30,14 @@ export const Blurred = styled.span`
 `;
 
 export function Blurrable({ children }) {
-  const [blur, setBlur] = useState(false);
-  const toggle = useCallback(() => setBlur(!blur), [blur, setBlur]);
+  const { hide, toggle } = useHide();
   const value = useMemo(() => {
-    if (blur) return random(children.length);
+    if (hide) return random(children.length);
     return children;
-  }, [blur, setBlur]);
+  }, [hide, children]);
   return (
     <span onClick={toggle}>
-      <Blurred blur={blur}>{value}</Blurred>
+      <Blurred blur={hide}>{value}</Blurred>
     </span>
   );
 }

@@ -89,6 +89,7 @@ function Connect() {
         provider.on("disconnect", (error) => {
           console.log("[Web3] disconnect");
           setConnected(false);
+          setAccount();
           reset(error);
           console.log(error);
         });
