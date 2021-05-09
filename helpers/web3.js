@@ -11,7 +11,7 @@ function Web3ContextProvider(props) {
   const [error, setError] = useState(undefined);
 
   const disconnect = useCallback(() => {
-    if (provider.close) {
+    if (provider && provider.close) {
       provider.close();
     }
     setConnected(false);

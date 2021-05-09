@@ -90,9 +90,7 @@ export default function Home() {
       <footer>
         <hr />
         <div style={{ display: "flex" }}>
-          <small style={{ flexGrow: "1" }}>
-            by 🧠 with ❤️
-          </small>
+          <small style={{ flexGrow: "1" }}>by 🧠 with ❤️</small>
           <small>
             <span>UI: </span>
             <Dotted href="https://twitter.com/nymmrx" target="_blank">

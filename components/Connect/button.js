@@ -10,6 +10,7 @@ import { shortenAddress } from "../../helpers/address";
 import { measures } from "../../helpers/measures";
 
 import chains from "../../chains.json";
+import { Blurrable } from "../Typography";
 
 const ConnectionDetails = styled.span`
   display: inline-block;
@@ -49,32 +50,36 @@ function Connect() {
     providerOptions,
   });
 
-  const connectProvider = (provider) => {
-    const web3 = new Web3Provider(provider);
-    Promise.all([
-      web3.getNetwork().then((net) => setChainId(net.chainId)),
-      web3.listAccounts().then(([account]) => setAccount(account)),
-    ]).then(() => setWeb3(web3));
-  };
+  const connectProvider = useCallback(
+    (provider) => {
+      console.log("[Web3] setting up provider");
+      const web3 = new Web3Provider(provider);
+      Promise.all([
+        web3.getNetwork().then((net) => setChainId(net.chainId)),
+        web3.listAccounts().then(([account]) => setAccount(account)),
+      ]).then(() => setWeb3(web3));
+    },
+    [setWeb3, setChainId, setAccount]
+  );
 
   const connect = useCallback(() => {
     modal
       .connect()
       .then((provider) => {
         provider.on("accountsChanged", ([account]) => {
-          console.log("web3: accountsChanged");
+          console.log("[Web3] accountsChanged");
           setAccount(account);
           connectProvider(provider);
         });
 
         provider.on("chainChanged", (chainId) => {
-          console.log("web3: chainChanged");
+          console.log("[Web3] chainChanged");
           setChainId(parseInt(chainId, 16));
           connectProvider(provider);
         });
 
         provider.on("connect", ({ chainId }) => {
-          console.log("web3: connect");
+          console.log("[Web3] connect");
           setConnected(true);
           setChainId(chainId);
           setError(undefined);
@@ -82,7 +87,8 @@ function Connect() {
         });
 
         provider.on("disconnect", (error) => {
-          console.log("web3: disconnect");
+          console.log("[Web3] disconnect");
+          setConnected(false);
           reset(error);
           console.log(error);
         });
@@ -105,7 +111,7 @@ function Connect() {
         <button onClick={deactivate}>Disconnect</button>
         {account && chainId && chainId in chains && (
           <ConnectionDetails>
-            👤 {shortenAddress(account)} / ⛓️ {chains[chainId].name}
+            👤 <Blurrable>{shortenAddress(account)}</Blurrable> / ⛓️ {chains[chainId].name}
           </ConnectionDetails>
         )}
         {chainId && !(chainId in chains) && <ConnectionDetails>⛔ Unsupported chain</ConnectionDetails>}

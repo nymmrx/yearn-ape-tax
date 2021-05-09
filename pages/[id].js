@@ -19,7 +19,7 @@ import Connect from "../components/Connect";
 import Warning from "../components/Warning";
 import VaultLimit from "../components/Vault/VaultLimit";
 import { Content, Page } from "../components/Layout";
-import { Dotted } from "../components/Typography";
+import { Blurrable, Dotted } from "../components/Typography";
 import NumericInput from "../components/NumericInput";
 
 import vaults from "../vaults.json";
@@ -121,7 +121,7 @@ export default function Vault() {
   }, [vaultDecimals, userVaultShares, vaultTokenPrice]);
 
   useEffect(() => {
-    console.log("[VAULT] Update");
+    console.log("[Vault] Update");
     if (Custom.includes(id)) return; // FIXME
     if (web3 && connected && account && vault && chainId === vault.chainId) {
       web3.getBalance(account).then(setEthBalance);
@@ -275,9 +275,7 @@ export default function Vault() {
         <footer>
           <hr />
           <div style={{ display: "flex" }}>
-            <small style={{ flexGrow: "1" }}>
-            by 🧠 with ❤️
-            </small>
+            <small style={{ flexGrow: "1" }}>by 🧠 with ❤️</small>
             <small>
               <span>UI: </span>
               <Dotted href="https://twitter.com/nymmrx" target="_blank">
@@ -387,7 +385,7 @@ export default function Vault() {
           <h3>Wallet</h3>
           <p>
             <span>Your account: </span>
-            {shortenAddress(account)}
+            <Blurrable>{shortenAddress(account)}</Blurrable>
           </p>
           <p>
             <span>Your vault shares: </span>
