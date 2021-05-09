@@ -5,13 +5,13 @@ import styled from "styled-components";
 import Connect from "../components/Connect";
 import VaultLink from "../components/Vault/VaultLink";
 import Warning from "../components/Warning";
-import { Page } from "../components/Layout";
+import { Page, Content } from "../components/Layout";
 
 import { useWeb3 } from "../helpers/web3";
-import { useKonami } from "../helpers/konami";
 import { measures } from "../helpers/measures";
 
 import vaults from "../vaults.json";
+import { Dotted } from "../components/Typography";
 
 const Types = styled.div`
   display: flex;
@@ -37,7 +37,6 @@ const Column = styled.div`
 
 export default function Home() {
   const { connected, chainId } = useWeb3();
-  const { activated } = useKonami();
   const vaultsByType = useMemo(() => {
     if (connected && chainId) {
       const all = Object.values(vaults)
@@ -65,27 +64,47 @@ export default function Home() {
           content="Staging environment and experiment repository for bleeding edge yearn.finance vaults."
         />
       </Head>
-      <h1>Experimental experiment registry</h1>
-      <Connect />
-      <hr />
-      <Warning>
-        this experiments are experimental. They are extremely risky and will probably be discarded when the test is
-        over. There's a good chance that you can lose your funds. If you choose to proceed, do it with extreme caution.
-      </Warning>
-      {connected && chainId && (
-        <Types>
-          {vaultsByType.map(([type, vaults]) => (
-            <Column key={type}>
-              <h3>{type}</h3>
-              {vaults.map((vault) => (
-                <VaultLink key={vault.id} vault={vault} />
-              ))}
-            </Column>
-          ))}
-        </Types>
-      )}
-      {activated && <h1>MONKE</h1>}
-      {!connected && <h5>connect your wallet...</h5>}
+      <Content>
+        <h1>Experimental experiment registry</h1>
+        <Connect />
+        <hr />
+        <Warning>
+          this experiments are experimental. They are extremely risky and will probably be discarded when the test is
+          over. There's a good chance that you can lose your funds. If you choose to proceed, do it with extreme
+          caution.
+        </Warning>
+        {connected && chainId && (
+          <Types>
+            {vaultsByType.map(([type, vaults]) => (
+              <Column key={type}>
+                <h3>{type}</h3>
+                {vaults.map((vault) => (
+                  <VaultLink key={vault.id} vault={vault} />
+                ))}
+              </Column>
+            ))}
+          </Types>
+        )}
+        {!connected && <h5>connect your wallet...</h5>}
+      </Content>
+      <footer>
+        <hr />
+        <div style={{ display: "flex" }}>
+          <small style={{ flexGrow: "1" }}>
+            by <a href="https://yearn.finance">🔵</a> with 💙
+          </small>
+          <small>
+            <span>UI: </span>
+            <Dotted href="https://twitter.com/nymmrx" target="_blank">
+              nymmrx
+            </Dotted>
+            <span>, </span>
+            <Dotted href="https://twitter.com/fameal" target="_blank">
+              fameal
+            </Dotted>
+          </small>
+        </div>
+      </footer>
     </Page>
   );
 }

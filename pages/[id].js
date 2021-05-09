@@ -18,7 +18,7 @@ import Suspense from "../components/Suspense";
 import Connect from "../components/Connect";
 import Warning from "../components/Warning";
 import VaultLimit from "../components/Vault/VaultLimit";
-import { Page } from "../components/Layout";
+import { Content, Page } from "../components/Layout";
 import { Dotted } from "../components/Typography";
 import NumericInput from "../components/NumericInput";
 
@@ -58,6 +58,7 @@ const Buttons = styled.section`
     min-width: 100px;
     margin: 12px 0 0 12px;
   }
+  padding-bottom: 2rem;
 `;
 
 const InputUnit = styled.div`
@@ -268,9 +269,7 @@ export default function Vault() {
             <Dotted>Back home</Dotted>
           </span>
         </Link>
-        <Section>
-          <span>👷‍♂️ Work in progress...</span>
-        </Section>
+        <Section></Section>
       </Page>
     );
   }
@@ -284,137 +283,164 @@ export default function Vault() {
           content="Staging environment and experiment repository for bleeding edge yearn.finance vaults."
         />
       </Head>
-      <h1>
-        <Title>{vault.logo}</Title> <Title>{vault.title}</Title>
-      </h1>
-      <Connect />
-      <hr />
-      <Warning>
-        this experiment is experimental. It's extremely risky and will probably be discarded when the test is over.
-        Proceed with extreme caution.
-      </Warning>
-      <Link href={"/"} passHref>
-        <span>
-          {"<< "}
-          <Dotted>Back home</Dotted>
-        </span>
-      </Link>
-      <Section>
-        <p>
-          <span>Vault: 📃 </span>
-          <Dotted color="gray" href={`${currentChain.explorer}/address/${vault.address}`} target="_blank">
-            Contract
-          </Dotted>
-        </p>
-        <p>
-          <span>Version: </span>
-          <Suspense wait={vaultVersion}>{vaultVersion}</Suspense>
-        </p>
-        <p>
-          <span>{vault.wantSymbol} price (CoinGecko 🦎): </span>
-          <Suspense wait={vaultTokenPrice}>${formatUnits(vaultTokenPrice, 6, 2)}</Suspense>
-        </p>
-        <p>
-          <span>Deposit Limit: </span>
-          <Suspense wait={vaultDepositLimit && vaultDecimals}>
-            {formatUnits(vaultDepositLimit, vaultDecimals)} {vault.wantSymbol}
-          </Suspense>
-        </p>
-        <p>
-          <span>Total Assets: </span>
-          <Suspense wait={vaultTotalAssets && vaultDecimals}>
-            {formatUnits(vaultTotalAssets, vaultDecimals, 2)} {vault.wantSymbol}
-          </Suspense>
-        </p>
-        <p>
-          <span>Total AUM: </span>
-          <Suspense wait={vaultTotalAum}>${formatUnits(vaultTotalAum, 6, 2)}</Suspense>
-        </p>
-        <br />
-        <p>
-          <span>Price Per Share: </span>
-          <Suspense wait={vaultPricePerShare && vaultDecimals}>
-            {formatUnits(vaultPricePerShare, vaultDecimals)}
-          </Suspense>
-        </p>
-        <p>
-          <span>Available limit: </span>
-          <Suspense wait={vaultAvailableLimit && vaultDecimals}>
-            {formatUnits(vaultAvailableLimit, vaultDecimals, 10)} {vault.wantSymbol}
-          </Suspense>
-        </p>
-        <VaultLimit value={vaultLimitPercentage} />
-      </Section>
-      <Section>
-        <h3>Strategies</h3>
-        <div>
-          {vaultStrategies.map((strategy, i) => (
-            <div key={strategy.address}>
-              <p>
-                <b>Strat. {i}</b> {strategy.name}
-              </p>
-              <p>
-                <span>Address: 📃 </span>
-                <Dotted color="gray" href={`${currentChain.explorer}/address/${strategy.address}`} target="_blank">
-                  Contract
-                </Dotted>
-              </p>
-            </div>
-          ))}
-        </div>
-      </Section>
-      <Section>
-        <h3>Wallet</h3>
-        <p>
-          <span>Your account: </span>
-          {shortenAddress(account)}
-        </p>
-        <p>
-          <span>Your vault shares: </span>
-          <Suspense wait={userVaultShares && vaultDecimals}>{formatUnits(userVaultShares, vaultDecimals, 2)}</Suspense>
-        </p>
-        <p>
-          <span>Your shares value: </span>
-          <Suspense wait={userSharesPrice}>${formatUnits(userSharesPrice, 6, 2)}</Suspense>
-        </p>
-        <p>
-          <span>Your {vault.wantSymbol} balance: </span>
-          <Suspense wait={userTokenBalance && vaultDecimals}>
-            {formatUnits(userTokenBalance, vaultDecimals, 2)}
-          </Suspense>
-        </p>
-        <p>
-          <span>Your {currentChain.coin} balance: </span>
-          <Suspense wait={ethBalance}>
-            {formatUnits(ethBalance, 18, 10)} {currentChain.symbol}
-          </Suspense>
-        </p>
-      </Section>
-      <Section>
-        <label>
-          Amount (<Dotted onClick={max}>Max</Dotted>)
-        </label>
-        <Amount>
-          <NumericInput value={input} onChange={setInput} />
-          <InputUnit>{vault.wantSymbol}</InputUnit>
-        </Amount>
-      </Section>
-      {connected && userVaultShares && (
+      <Content>
+        <h1>
+          <Title>{vault.logo}</Title> <Title>{vault.title}</Title>
+        </h1>
+        <Connect />
+        <hr />
+        <Warning>
+          this experiment is experimental. It's extremely risky and will probably be discarded when the test is over.
+          Proceed with extreme caution.
+        </Warning>
+        <Link href={"/"} passHref>
+          <span>
+            {"<< "}
+            <Dotted>Back home</Dotted>
+          </span>
+        </Link>
         <Section>
-          <Buttons>
-            <button onClick={approve} disabled={vault.status === "withdraw" || userAllowance}>
-              🚀 Approve
-            </button>
-            <button onClick={deposit} disabled={vault.status === "withdraw" || !userAllowance}>
-              🏦 Deposit
-            </button>
-            <button onClick={depositAll} disabled={vault.status === "withdraw" || !userAllowance}>
-              🏦 Deposit All
-            </button>
-            <button disabled={userVaultShares.isZero()}>💸 Withdraw All</button>
-          </Buttons>
+          <p>
+            <span>Vault: 📃 </span>
+            <Dotted color="gray" href={`${currentChain.explorer}/address/${vault.address}`} target="_blank">
+              Contract
+            </Dotted>
+          </p>
+          <p>
+            <span>Version: </span>
+            <Suspense wait={vaultVersion}>{vaultVersion}</Suspense>
+          </p>
+          <p>
+            <span>{vault.wantSymbol} price (CoinGecko 🦎): </span>
+            <Suspense wait={vaultTokenPrice}>${formatUnits(vaultTokenPrice, 6, 2)}</Suspense>
+          </p>
+          <p>
+            <span>Deposit Limit: </span>
+            <Suspense wait={vaultDepositLimit && vaultDecimals}>
+              {formatUnits(vaultDepositLimit, vaultDecimals)} {vault.wantSymbol}
+            </Suspense>
+          </p>
+          <p>
+            <span>Total Assets: </span>
+            <Suspense wait={vaultTotalAssets && vaultDecimals}>
+              {formatUnits(vaultTotalAssets, vaultDecimals, 2)} {vault.wantSymbol}
+            </Suspense>
+          </p>
+          <p>
+            <span>Total AUM: </span>
+            <Suspense wait={vaultTotalAum}>${formatUnits(vaultTotalAum, 6, 2)}</Suspense>
+          </p>
+          <br />
+          <p>
+            <span>Price Per Share: </span>
+            <Suspense wait={vaultPricePerShare && vaultDecimals}>
+              {formatUnits(vaultPricePerShare, vaultDecimals)}
+            </Suspense>
+          </p>
+          <p>
+            <span>Available limit: </span>
+            <Suspense wait={vaultAvailableLimit && vaultDecimals}>
+              {formatUnits(vaultAvailableLimit, vaultDecimals, 10)} {vault.wantSymbol}
+            </Suspense>
+          </p>
+          <VaultLimit value={vaultLimitPercentage} />
         </Section>
-      )}
+        <Section>
+          <h3>Strategies</h3>
+          <div>
+            {vaultStrategies.map((strategy, i) => (
+              <div key={strategy.address}>
+                <p>
+                  <b>Strat. {i}</b> {strategy.name}
+                </p>
+                <p>
+                  <span>Address: 📃 </span>
+                  <Dotted color="gray" href={`${currentChain.explorer}/address/${strategy.address}`} target="_blank">
+                    Contract
+                  </Dotted>
+                </p>
+              </div>
+            ))}
+          </div>
+        </Section>
+        <Section>
+          <h3>Wallet</h3>
+          <p>
+            <span>Your account: </span>
+            {shortenAddress(account)}
+          </p>
+          <p>
+            <span>Your vault shares: </span>
+            <Suspense wait={userVaultShares && vaultDecimals}>
+              {formatUnits(userVaultShares, vaultDecimals, 2)}
+            </Suspense>
+          </p>
+          <p>
+            <span>Your shares value: </span>
+            <Suspense wait={userSharesPrice}>${formatUnits(userSharesPrice, 6, 2)}</Suspense>
+          </p>
+          <p>
+            <span>Your {vault.wantSymbol} balance: </span>
+            <Suspense wait={userTokenBalance && vaultDecimals}>
+              {formatUnits(userTokenBalance, vaultDecimals, 2)}
+            </Suspense>
+          </p>
+          <p>
+            <span>Your {currentChain.coin} balance: </span>
+            <Suspense wait={ethBalance}>
+              {formatUnits(ethBalance, 18, 10)} {currentChain.symbol}
+            </Suspense>
+          </p>
+        </Section>
+        <Section>
+          <label>
+            Amount (<Dotted onClick={max}>Max</Dotted>)
+          </label>
+          <Amount>
+            <NumericInput value={input} onChange={setInput} />
+            <InputUnit>{vault.wantSymbol}</InputUnit>
+          </Amount>
+        </Section>
+        {connected && userVaultShares && (
+          <Section>
+            <Buttons>
+              <button onClick={approve} disabled={vault.status === "withdraw" || userAllowance}>
+                🚀 Approve
+              </button>
+              <button onClick={deposit} disabled={vault.status === "withdraw" || !userAllowance}>
+                🏦 Deposit
+              </button>
+              <button onClick={depositAll} disabled={vault.status === "withdraw" || !userAllowance}>
+                🏦 Deposit All
+              </button>
+              <button onClick={withdrawAll} disabled={userVaultShares.isZero()}>
+                💸 Withdraw All
+              </button>
+            </Buttons>
+          </Section>
+        )}
+      </Content>
+      <footer>
+        <hr />
+        <div style={{ display: "flex" }}>
+          <small style={{ flexGrow: "1" }}>
+            <span>Strategy: </span>
+            <Dotted href={`https://twitter.com/${vault.developer}`} target="_blank">
+              {vault.developer}
+            </Dotted>
+          </small>
+          <small>
+            <span>UI: </span>
+            <Dotted href="https://twitter.com/nymmrx" target="_blank">
+              nymmrx
+            </Dotted>
+            <span>, </span>
+            <Dotted href="https://twitter.com/fameal" target="_blank">
+              fameal
+            </Dotted>
+          </small>
+        </div>
+      </footer>
     </Page>
   );
 }
